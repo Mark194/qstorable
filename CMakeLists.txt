@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(QStorable VERSION 1.0.0 LANGUAGES CXX)
 
 # Настройки C++
@@ -19,7 +19,8 @@ endif()
 
 # Header-only библиотека
 add_library(QStorable INTERFACE
-        include/QStorable/qstorable.hpp)
+        include/QStorable/qstorable.hpp
+        tests/binary/TestQStorable.cpp)
 target_include_directories(QStorable INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
@@ -49,9 +50,9 @@ install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/QStorableConfigVersion.cmake
         DESTINATION lib/cmake/QStorable)
 
-# Подключение подпроектов
-if(QSTORABLE_BUILD_TESTS AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt)
-    add_subdirectory(test)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
 
 if(QSTORABLE_BUILD_EXAMPLES AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/examples/CMakeLists.txt)
