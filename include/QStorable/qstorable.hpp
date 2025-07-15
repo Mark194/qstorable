@@ -120,7 +120,14 @@ protected:
         type m_##name{}; \
     public: \
         type name() const { return m_##name; } \
-    void set##name(type value) { m_##name = value; }
+    void set##name(type value) { m_##name = std::move(value); }
+
+#define QS_DECLARE_RVALUE_MEMBER(type, name) \
+    private: \
+        type m_##name{}; \
+    public: \
+        [[nodiscard]] type name() const { return m_##name; } \
+    void set##name(const type & value) { m_##name = value; }
 
 #ifdef QS_BINARY_SUPPORT
 #define QS_BINARY_FIELD(type, name) \
@@ -138,6 +145,24 @@ protected:
 #define QS_BINARY_FIELD(type, name)
 #endif
 
+#ifdef QS_BINARY_SUPPORT
+#define QS_BINARY_OBJECT(type, name) \
+    Q_PROPERTY(QByteArray name READ GET(json, name) WRITE SET(json, name))                  \
+    private:                                                                                \
+        QByteArray GET(json, name)() const {                                              \
+            return m_##name.toBinary();                                                             \
+        }                                                                                       \
+        void SET(json, name)(const QByteArray & varname) {                                      \
+            m_##name.fromBinary(varname);                                                             \
+        }
+#else
+#define QS_BINARY_OBJECT(type, name)
+#endif
+
 #define QS_FIELD(type, name) \
     QS_DECLARE_MEMBER(type, name) \
-    QS_BINARY_FIELD(type, name)
+    QS_BINARY_FIELD(type, name) \
+
+#define QS_OBJECT(type, name) \
+    QS_DECLARE_RVALUE_MEMBER(type, name) \
+    QS_BINARY_OBJECT(type, name)
