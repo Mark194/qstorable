@@ -1,38 +1,40 @@
 cmake_minimum_required(VERSION 3.10)
 project(QStorableBinaryTest LANGUAGES CXX)
 
-# Поиск Qt5 компонентов
 find_package(Qt5 REQUIRED COMPONENTS Core Test)
 
-set(SOURCES TestQStorable.cpp ${QSTORABLE_INCLUDE_DIR}/QStorable/qstorable.hpp)
+# Включаем AUTOMOC глобально (для Q_GADGET)
+set(CMAKE_AUTOMOC ON)
 
-# Создаем тестовый исполняемый файл
-add_executable(qstorable_binary_test ${SOURCES})
-
-# Подключаем автогенерацию moc
-set_target_properties(qstorable_binary_test PROPERTIES
-        AUTOMOC ON
+set(TEST_SOURCES
+        test_base_field.cpp
+        test_custom_field.cpp
 )
 
-# Линкуем необходимые Qt5 модули
-target_link_libraries(qstorable_binary_test
-        PRIVATE
-        Qt5::Core
-        Qt5::Test
-)
+foreach(test_file ${TEST_SOURCES})
+    # Получаем имя теста без расширения
+    get_filename_component(test_name ${test_file} NAME_WE)
 
-target_include_directories(qstorable_binary_test PRIVATE ${QSTORABLE_INCLUDE_DIR})
+    # Создаем исполняемый файл
+    add_executable(${test_name} ${test_file} ${QSTORABLE_INCLUDE_DIR}/QStorable/qstorable.hpp)
 
-# Подключаем заголовочные файлы основного проекта
-target_include_directories(qstorable_binary_test
-        PRIVATE
-        ${CMAKE_SOURCE_DIR}/src
-)
+    # Подключаем зависимости
+    target_link_libraries(${test_name} PRIVATE
+            Qt5::Core
+            Qt5::Test
+    )
 
-# Добавляем тест в CTest
-if(BUILD_TESTING)
-    include(CTest)
-    add_test(NAME binary_serialization COMMAND qstorable_binary_test)
-endif()
+    # Правильное указание include директорий
+    target_include_directories(${test_name} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_SOURCE_DIR}/include  # Путь к QStorable
+            ${CMAKE_SOURCE_DIR}/src     # Дополнительные исходники
+    )
+
+    # Добавляем тест в CTest
+    if(BUILD_TESTING)
+        add_test(NAME ${test_name} COMMAND ${test_name})
+    endif()
+endforeach()
 
 add_definitions(-DQS_BINARY_SUPPORT)

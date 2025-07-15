@@ -1,4 +1,4 @@
-#include <QtTest/QtTest>
+#include <QtTest>
 
 #include <QStorable/qstorable.hpp>
 
@@ -12,21 +12,21 @@ public:
     int normalValue = 0;
 };
 
-class BinarySerializationTest final : public QObject
+class TestBaseField final : public QObject
 {
     Q_OBJECT
 private slots:
-    static void initTestCase()
+    void initTestCase()
     {
         qDebug("Initializing binary serialization tests...");
     }
 
-    static void test_basic_serialization() {
+    void test_basic_serialization() {
         TestSerializable obj;
-        obj.setintValue(42); // Теперь правильно
+        obj.setintValue(42);
         obj.setfloatValue(3.14f);
         obj.setstringValue("Test");
-        obj.normalValue = 100; // Теперь доступно
+        obj.normalValue = 100;
 
         QByteArray data = obj.toBinary();
 
@@ -39,7 +39,7 @@ private slots:
         QCOMPARE(obj2.normalValue, 0);
     }
 
-    static void test_data_integrity() {
+    void test_data_integrity() {
         TestSerializable obj;
         obj.setintValue(123456);
         obj.setfloatValue(123.456f);
@@ -55,5 +55,5 @@ private slots:
     }
 };
 
-QTEST_APPLESS_MAIN(BinarySerializationTest)
-#include "TestQStorable.moc"
+QTEST_APPLESS_MAIN(TestBaseField)
+#include "test_base_field.moc"
