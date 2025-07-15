@@ -18,7 +18,8 @@ else()
 endif()
 
 # Header-only библиотека
-add_library(QStorable INTERFACE)
+add_library(QStorable INTERFACE
+        include/QStorable/qstorable.hpp)
 target_include_directories(QStorable INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
