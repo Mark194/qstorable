@@ -121,6 +121,7 @@ public:
     virtual ~QStorable() = default;
 
 #ifdef QS_BINARY_SUPPORT
+
 public:
     void setByteOrder(QDataStream::ByteOrder byteOrder) {
         m_byteOrder = byteOrder;
@@ -130,7 +131,9 @@ public:
         m_precision = precision;
     }
 
-    QByteArray toBinary() const {
+
+
+    virtual QByteArray toBinary() const {
         QByteArray data;
         QDataStream stream(&data, QIODevice::WriteOnly);
         qBinarySupport::configureStream(stream, m_byteOrder, m_precision);
@@ -146,7 +149,25 @@ public:
         return data;
     }
 
-    void fromBinary(const QByteArray& data) {
+    // Сериализация только указанного поля (перегрузка)
+    virtual QByteArray toBinary(const QString& fieldName) const {
+        QByteArray data;
+        QDataStream stream(&data, QIODevice::WriteOnly);
+        qBinarySupport::configureStream(stream, m_byteOrder, m_precision);
+
+        const QMetaObject* meta = metaObject();
+        for (int i = 0; i < meta->propertyCount(); ++i) {
+            QMetaProperty prop = meta->property(i);
+            if (QString(prop.name()) == fieldName and
+                prop.userType() == qMetaTypeId<QByteArray>()) {
+                QByteArray value = prop.readOnGadget(this).toByteArray();
+                stream << value;
+            }
+        }
+        return data;
+    }
+
+    virtual void fromBinary(const QByteArray& data) {
         QDataStream stream(data);
         qBinarySupport::configureStream(stream, m_byteOrder, m_precision);
 
@@ -161,6 +182,22 @@ public:
         }
     }
 
+    virtual void fromBinary(const QByteArray& data, const QString& fieldName) {
+        QDataStream stream(data);
+        qBinarySupport::configureStream(stream, m_byteOrder, m_precision);
+
+        const QMetaObject* meta = metaObject();
+        for (int i = 0; i < meta->propertyCount(); ++i) {
+            QMetaProperty prop = meta->property(i);
+            if (QString(prop.name()) == fieldName && prop.userType() == qMetaTypeId<QByteArray>()) {
+                QByteArray value;
+                stream >> value;
+                prop.writeOnGadget(this, value);
+                break; // Нашли нужное поле - выходим
+            }
+        }
+    }
+
 protected:
     QDataStream::ByteOrder m_byteOrder = QDataStream::BigEndian;
     QDataStream::FloatingPointPrecision m_precision = QDataStream::DoublePrecision;
@@ -171,36 +208,20 @@ protected:
 #define SET(prefix, name) set_##prefix##_##name
 
 #define QS_DECLARE_MEMBER(type, name) \
-    private: \
-        type m_##name{}; \
     public: \
-        type name() const { return m_##name; } \
-    void set##name(type value) { m_##name = std::move(value); }
+        type name{}; \
 
 #define QS_DECLARE_RVALUE_MEMBER(type, name) \
-    private: \
-        type m_##name{}; \
     public: \
-        [[nodiscard]] type name() const { return m_##name; } \
-    void set##name(const type & value) { m_##name = value; }
+        type name{};
 
 #define QS_DECLARE_ARRAY_MEMBER(itemType, name, size) \
-    private: \
-        itemType m_##name[size] = {}; \
     public: \
-        const itemType * name() const { return m_##name; } \
-        itemType * name() { return m_##name; } \
-        static constexpr int name##Size() { return (size); }
+        itemType name[(size)] = {};
 
 #define QS_DECLARE_LIST_MEMBER(collection, itemType, name, size) \
-    private: \
-        collection<itemType> m_##name; \
     public: \
-        const collection<itemType>& name() const { return m_##name; } \
-        void set##name(const collection<itemType> & value) { \
-            m_##name = value; \
-        } \
-        int name##Size() const { return (size); }
+        collection<itemType> name;
 
 #ifdef QS_BINARY_SUPPORT
 #define QS_BINARY_FIELD(type, name) \
@@ -208,11 +229,11 @@ protected:
     protected: \
         QByteArray GET( binary, name )() const { \
             QByteArray data; \
-            qBinarySupport::serializeFieldTo(data, m_##name, m_byteOrder, m_precision); \
+            qBinarySupport::serializeFieldTo(data, name, m_byteOrder, m_precision); \
             return data; \
         } \
         void SET( binary, name )(const QByteArray& data) { \
-            m_##name = qBinarySupport::deserializeFieldFrom<type>(data, m_byteOrder, m_precision); \
+            name = qBinarySupport::deserializeFieldFrom<type>(data, m_byteOrder, m_precision); \
         }
 #else
 #define QS_BINARY_FIELD(type, name)
@@ -223,10 +244,10 @@ protected:
     Q_PROPERTY(QByteArray name READ GET(binary, name) WRITE SET(binary, name))                  \
     private:                                                                                \
         QByteArray GET(binary, name)() const {                                              \
-            return m_##name.toBinary();                                                             \
+            return name.toBinary();                                                             \
         }                                                                                       \
         void SET(binary, name)(const QByteArray & data) {                                      \
-            m_##name.fromBinary(data);                                                             \
+            name.fromBinary(data);                                                             \
         }
 #else
 #define QS_BINARY_OBJECT(type, name)
@@ -238,11 +259,11 @@ protected:
     private: \
         QByteArray GET(binary, name)() const { \
             QByteArray data; \
-            qBinarySupport::serializeArray(data, m_##name, (size), m_byteOrder, m_precision); \
+            qBinarySupport::serializeArray(data, name, (size), m_byteOrder, m_precision); \
             return data; \
         } \
         void SET(binary, name)(const QByteArray & data) { \
-            qBinarySupport::deserializeArray(data, m_##name, (size), m_byteOrder, m_precision);\
+            qBinarySupport::deserializeArray(data, name, (size), m_byteOrder, m_precision);\
         }
 #else
 #define QS_BINARRY_ARRAY(itemType, name, size)
@@ -254,11 +275,13 @@ protected:
     private: \
         QByteArray GET(binary, name)() const { \
             QByteArray data; \
-            qBinarySupport::serializeCollection(data, m_##name, (size), m_byteOrder, m_precision); \
+            auto arraySize = (size); \
+            qBinarySupport::serializeCollection(data, name, arraySize, m_byteOrder, m_precision); \
             return data; \
         } \
         void SET(binary, name)(const QByteArray & data) { \
-            qBinarySupport::deserializeCollection(data, m_##name, (size), m_byteOrder, m_precision);\
+            auto arraySize = (size); \
+            qBinarySupport::deserializeCollection(data, name, arraySize, m_byteOrder, m_precision);\
         }
 #else
 #define QS_BINARY_COLLECTION(collection, itemType, name, size)
@@ -274,7 +297,7 @@ protected:
         QDataStream stream(&result, QIODevice::WriteOnly); \
         qBinarySupport::configureStream(stream, m_byteOrder, m_precision); \
         for (int i = 0; i < (size); ++i) { \
-            stream << m_##name[i].toBinary(); \
+            stream << name[i].toBinary(); \
         } \
         return result; \
     } \
@@ -284,7 +307,7 @@ protected:
         for (int i = 0; i < (size); ++i) { \
             QByteArray itemData; \
             stream >> itemData; \
-            m_##name[i].fromBinary(itemData); \
+            name[i].fromBinary(itemData); \
         } \
     }
 #else
@@ -298,18 +321,18 @@ protected:
     QByteArray GET(binary, name)() const { \
         QByteArray result; \
         QDataStream stream(&result, QIODevice::WriteOnly); \
-        for (auto i = 0; i < size; ++i) \
-            stream << m_##name[i].toBinary(); \
+        for (auto i = 0; i < (size); ++i) \
+            stream << name[i].toBinary(); \
         return result; \
     } \
     void SET(binary, name)(const QByteArray & data) { \
         QDataStream stream(data); \
-        for (int i = 0; i < size; ++i) { \
+        for (int i = 0; i < (size); ++i) { \
             QByteArray itemData; \
             stream >> itemData; \
             itemType obj; \
             obj.fromBinary(itemData); \
-            m_##name.append(obj); \
+            name.append(obj); \
         } \
     }
 #else
