@@ -23,9 +23,9 @@ private slots:
 
     void test_basic_serialization() {
         TestSerializable obj;
-        obj.setintValue(42);
-        obj.setfloatValue(3.14f);
-        obj.setstringValue("Test");
+        obj.intValue = 42;
+        obj.floatValue = 3.14f;
+        obj.stringValue = "Test";
         obj.normalValue = 100;
 
         QByteArray data = obj.toBinary();
@@ -33,25 +33,25 @@ private slots:
         TestSerializable obj2;
         obj2.fromBinary(data);
 
-        QCOMPARE(obj2.intValue(), 42);
-        QCOMPARE(obj2.floatValue(), 3.14f);
-        QCOMPARE(obj2.stringValue(), QString("Test"));
+        QCOMPARE(obj2.intValue, 42);
+        QCOMPARE(obj2.floatValue, 3.14f);
+        QCOMPARE(obj2.stringValue, QString("Test"));
         QCOMPARE(obj2.normalValue, 0);
     }
 
     void test_data_integrity() {
         TestSerializable obj;
-        obj.setintValue(123456);
-        obj.setfloatValue(123.456f);
-        obj.setstringValue("Тест с русскими символами");
+        obj.intValue = 123456;
+        obj.floatValue = 123.456f;
+        obj.stringValue = "Тест с русскими символами";
 
         QByteArray data = obj.toBinary();
         TestSerializable obj2;
         obj2.fromBinary(data);
 
-        QCOMPARE(obj2.intValue(), 123456);
-        QCOMPARE(obj2.floatValue(), 123.456f);
-        QCOMPARE(obj2.stringValue(), QString("Тест с русскими символами"));
+        QCOMPARE(obj2.intValue, 123456);
+        QCOMPARE(obj2.floatValue, 123.456f);
+        QCOMPARE(obj2.stringValue, QString("Тест с русскими символами"));
     }
 };
 

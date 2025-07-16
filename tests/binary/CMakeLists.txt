@@ -10,6 +10,7 @@ set(TEST_SOURCES
         test_custom_field.cpp
         test_array_field.cpp
         test_custom_array_field.cpp
+        test_real_data.cpp
 )
 
 foreach(test_file ${TEST_SOURCES})

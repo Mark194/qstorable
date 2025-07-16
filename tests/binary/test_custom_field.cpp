@@ -33,21 +33,21 @@ private slots:
         qRegisterMetaType<Range>();
 
         Range range;
-        range.setx(1.0);
-        range.sety(2.0);
+        range.x = 1.0;
+        range.y = 2.0;
 
         CustomObject obj;
-        obj.setrange(range);
+        obj.range = range;
 
         QByteArray data = obj.toBinary();
 
         CustomObject obj2;
         obj2.fromBinary(data);
 
-        const auto rangeFromBytes = obj2.range();
+        const auto rangeFromBytes = obj2.range;
 
-        QCOMPARE(rangeFromBytes.x(), range.x());
-        QCOMPARE(rangeFromBytes.y(), range.y());
+        QCOMPARE(rangeFromBytes.x, range.x);
+        QCOMPARE(rangeFromBytes.y, range.y);
     }
 };
 

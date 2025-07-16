@@ -29,7 +29,7 @@ private Q_SLOTS:
         TestFixedArray array;
 
         for (int i = 0; i < 5; ++i) {
-            array.nums()[i] = i;
+            array.nums[i] = i;
         }
 
         const auto rawData = array.toBinary();
@@ -39,7 +39,7 @@ private Q_SLOTS:
         array2.fromBinary(rawData);
 
         for (int i = 0; i < 5; ++i) {
-            QCOMPARE(array2.nums()[i], i);
+            QCOMPARE(array2.nums[i], i);
         }
     }
 
@@ -52,7 +52,7 @@ private Q_SLOTS:
             numbers.append(i);
         }
 
-        collection.setnumbers(numbers);
+        collection.numbers = numbers;
 
         auto rawData = collection.toBinary();
 
@@ -60,7 +60,7 @@ private Q_SLOTS:
         collection2.fromBinary(rawData);
 
         for (int i = 0; i < 10; ++i) {
-            QCOMPARE(collection2.numbers()[i], i);
+            QCOMPARE(collection2.numbers[i], i);
         }
     }
 };

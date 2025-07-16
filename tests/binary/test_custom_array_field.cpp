@@ -10,7 +10,7 @@ class Range : public QStorable
     QS_FIELD(double, z)
 public:
     bool operator==(const Range& other) const {
-        return x() == other.x() and y() == other.y() and z() == other.z();
+        return x == other.x and y == other.y and z == other.z;
     }
 };
 
@@ -43,28 +43,28 @@ private Q_SLOTS:
     void testFixedArrayObject()
     {
         Range range;
-        range.setx(0.15);
-        range.sety(0.5);
-        range.setz(0.75);
+        range.x = 0.15;
+        range.y = 0.5;
+        range.z = 0.75;
 
         Range range2;
-        range2.setx(1.15);
-        range2.sety(1.5);
-        range2.setz(1.75);
+        range2.x = 1.15;
+        range2.y = 1.50;
+        range2.z = 1.75;
 
         Range range3;
-        range3.setx(2.15);
-        range3.sety(2.5);
-        range3.setz(2.75);
+        range3.x = 2.15;
+        range3.y = 2.5;
+        range3.z = 2.75;
 
         CustomObject customObject;
-        customObject.setname("Marker One");
-        customObject.setdescription("Marker in space");
+        customObject.name = "Marker One";
+        customObject.description = "Marker in space";
 
         int i = 0;
 
         for (auto & temp : {range, range2, range3}) {
-            customObject.ranges()[i] = temp;
+            customObject.ranges[i] = temp;
             ++i;
         }
 
@@ -73,14 +73,14 @@ private Q_SLOTS:
         CustomObject customObject2;
         customObject2.fromBinary(array);
 
-        QCOMPARE(customObject2.name(), customObject.name());
-        QCOMPARE(customObject2.description(), customObject.description());
+        QCOMPARE(customObject2.name, customObject.name);
+        QCOMPARE(customObject2.description, customObject.description);
 
 
         i = 0;
 
         for (auto & temp : {range, range2, range3}) {
-            QCOMPARE(customObject2.ranges()[i], temp);
+            QCOMPARE(customObject2.ranges[i], temp);
             ++i;
         }
 
@@ -89,37 +89,37 @@ private Q_SLOTS:
     void testFixedListObject()
     {
         Range range;
-        range.setx(4.15);
-        range.sety(5.5);
-        range.setz(6.75);
+        range.x = 4.15;
+        range.y = 5.50;
+        range.z = 6.75;
 
         Range range2;
-        range2.setx(7.15);
-        range2.sety(8.5);
-        range2.setz(9.75);
+        range2.x = 7.15;
+        range2.y = 8.50;
+        range2.z = 9.75;
 
         Range range3;
-        range3.setx(2.15);
-        range3.sety(4.5);
-        range3.setz(1.75);
+        range3.x = 2.15;
+        range3.y = 4.50;
+        range3.z = 1.75;
 
         CustomObject2 customObject;
-        customObject.setname("Marker Two");
-        customObject.setdescription("Marker in other space");
+        customObject.name = "Marker Two";
+        customObject.description = "Marker in other space";
 
-        customObject.setranges({range, range2, range3});
+        customObject.ranges = {range, range2, range3};
 
         const auto array = customObject.toBinary();
 
         CustomObject2 customObject2;
         customObject2.fromBinary(array);
 
-        QCOMPARE(customObject2.name(), customObject.name());
-        QCOMPARE(customObject2.description(), customObject.description());
+        QCOMPARE(customObject2.name, customObject.name);
+        QCOMPARE(customObject2.description, customObject.description);
 
         const QVector ranges = {range, range2, range3};
 
-        QCOMPARE(customObject2.ranges(), ranges);
+        QCOMPARE(customObject2.ranges, ranges);
     }
 };
 
