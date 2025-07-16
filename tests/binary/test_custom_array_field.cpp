@@ -22,6 +22,14 @@ class CustomObject : public QStorable
     QS_OBJECT_ARRAY_FIXED(Range, ranges, 3)
 };
 
+class CustomObject2 : public QStorable
+{
+    QSTORABLE
+    QS_FIELD(QString, name)
+    QS_FIELD(QString, description)
+    QS_OBJECT_COLLECTION_FIXED(QVector, Range, ranges, 3)
+};
+
 class TestCustomArrayField : public QObject
 {
     Q_OBJECT
@@ -76,6 +84,42 @@ private Q_SLOTS:
             ++i;
         }
 
+    }
+
+    void testFixedListObject()
+    {
+        Range range;
+        range.setx(4.15);
+        range.sety(5.5);
+        range.setz(6.75);
+
+        Range range2;
+        range2.setx(7.15);
+        range2.sety(8.5);
+        range2.setz(9.75);
+
+        Range range3;
+        range3.setx(2.15);
+        range3.sety(4.5);
+        range3.setz(1.75);
+
+        CustomObject2 customObject;
+        customObject.setname("Marker Two");
+        customObject.setdescription("Marker in other space");
+
+        customObject.setranges({range, range2, range3});
+
+        const auto array = customObject.toBinary();
+
+        CustomObject2 customObject2;
+        customObject2.fromBinary(array);
+
+        QCOMPARE(customObject2.name(), customObject.name());
+        QCOMPARE(customObject2.description(), customObject.description());
+
+        const QVector ranges = {range, range2, range3};
+
+        QCOMPARE(customObject2.ranges(), ranges);
     }
 };
 
