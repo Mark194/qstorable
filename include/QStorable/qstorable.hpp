@@ -232,7 +232,6 @@ protected:
 #define QS_BINARY_OBJECT(type, name)
 #endif
 
-// TODO: Binary array
 #ifdef QS_BINARY_SUPPORT
 #define QS_BINARY_ARRAY(itemType, name, size) \
     Q_PROPERTY(QByteArray name READ GET(binary, name) WRITE SET(binary, name)) \
@@ -261,9 +260,61 @@ protected:
         void SET(binary, name)(const QByteArray & data) { \
             qBinarySupport::deserializeCollection(data, m_##name, (size), m_byteOrder, m_precision);\
         }
+#else
+#define QS_BINARY_COLLECTION(collection, itemType, name, size)
 #endif
 
+
 // TODO: Binary array objects
+#ifdef QS_BINARY_SUPPORT
+#define QS_BINARY_ARRAY_OBJECT(itemType, name, size) \
+    Q_PROPERTY(QByteArray name READ GET(binary, name) WRITE SET(binary, name)) \
+    QByteArray GET(binary, name)() const { \
+        QByteArray result; \
+        QDataStream stream(&result, QIODevice::WriteOnly); \
+        qBinarySupport::configureStream(stream, m_byteOrder, m_precision); \
+        for (int i = 0; i < (size); ++i) { \
+            stream << m_##name[i].toBinary(); \
+        } \
+        return result; \
+    } \
+    void SET(binary, name)(const QByteArray & data) { \
+        QDataStream stream(data); \
+        qBinarySupport::configureStream(stream, m_byteOrder, m_precision); \
+        for (int i = 0; i < (size); ++i) { \
+            QByteArray itemData; \
+            stream >> itemData; \
+            m_##name[i].fromBinary(itemData); \
+        } \
+    }
+#else
+#define QS_BINARY_ARRAY_OBJECT(itemType, name, size)
+#endif
+
+#ifdef QS_BINARY_SUPPORT
+#define QS_BINARY_COLLECTION_OBJECT(collection, itemType, name, size) \
+    Q_PROPERTY(QByteArray name READ GET(binary, name) WRITE SET(binary, name)) \
+    private: \
+    QByteArray GET(binary, name)() const { \
+        QByteArray result; \
+        QDataStream stream(&result, QIODevice::WriteOnly); \
+        for (auto i = 0; i < size; ++i) \
+            stream << m_##name[i].toBinary(); \
+        return result; \
+    } \
+    void SET(binary, name)(const QByteArray & data) { \
+        QDataStream stream(data); \
+        for (int i = 0; i < size; ++i) { \
+            QByteArray itemData; \
+            stream >> itemData; \
+            itemType obj; \
+            obj.fromBinary(itemData); \
+            m_##name.append(obj); \
+        } \
+    }
+#else
+#define QS_BINARY_COLLECTION_OBJECT(collection, itemType, name, size)
+#endif
 
 #define QS_FIELD(type, name) \
     QS_DECLARE_MEMBER(type, name) \
@@ -280,3 +331,11 @@ protected:
 #define QS_COLLECTION_FIXED(collection, itemType, name, size) \
     QS_DECLARE_LIST_MEMBER(collection, itemType, name, size) \
     QS_BINARY_COLLECTION(collection, itemType, name, size)
+
+#define QS_OBJECT_ARRAY_FIXED(type, name, size) \
+    QS_DECLARE_ARRAY_MEMBER(type, name, size) \
+    QS_BINARY_ARRAY_OBJECT(type, name, size)
+
+#define QS_OBJECT_COLLECTION_FIXED(collection, itemType, name, size) \
+    QS_DECLARE_LIST_MEMBER(collection, itemType, name, size) \
+    QS_BINARY_COLLECTION_OBJECT(collection, itemType, name, size)
