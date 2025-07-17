@@ -38,44 +38,6 @@ class DataCan : public QStorable
 public:
 
     DataCan() = default;
-
-    // [[nodiscard]] QByteArray toBinary() const override
-    // {
-    //     QByteArray result;
-    //
-    //     QDataStream stream(&result, QIODevice::WriteOnly);
-    //
-    //     qBinarySupport::configureStream( stream, m_byteOrder, m_precision );
-    //
-    //     auto headerData = header.toBinary();
-    //
-    //     stream.writeRawData( headerData.constData(), headerData.size() ) ;
-    //
-    //     stream << QStorable::toBinary("dataId");
-    //
-    //     stream << QStorable::toBinary("dataLength");
-    //
-    //     for (quint32 i = 0; i < dataLength; ++i)
-    //         stream << dataCan[i];
-    //
-    //     return result;
-    // }
-    //
-    // void fromBinary(const QByteArray & data) override
-    // {
-    //     QDataStream stream(data);
-    //
-    //     qBinarySupport::configureStream( stream, m_byteOrder, m_precision );
-    //
-    //     header.fromBinary( data );
-    //
-    //     QStorable::fromBinary(data, "dataId");
-    //
-    //     QStorable::fromBinary(data, "dataLength");
-    //
-    //     for (quint32 i = 0; i < dataLength; ++i)
-    //         stream >> dataCan[i];
-    // }
 };
 
 constexpr quint64 TIME = 0x1996250415;
