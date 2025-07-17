@@ -105,7 +105,9 @@ template <template<typename> class Collection, typename ItemType>
         QDataStream stream(data);
         configureStream(stream, byteOrder, precision);
         for (int i = 0; i < size; ++i) {
-            stream >> array[i];
+            ItemType item;
+            stream >> item;
+            array << item;
         }
     }
 };
