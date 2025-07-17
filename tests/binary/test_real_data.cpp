@@ -36,37 +36,46 @@ class DataCan : public QStorable
     QS_FIELD(quint8, dataLength)
     QS_ARRAY_FIXED(quint16, dataCan, 8)
 public:
-    QByteArray toBinary() const override
-    {
-        QByteArray result;
 
-        QDataStream stream(&result, QIODevice::WriteOnly);
+    DataCan() = default;
 
-        stream << header.toBinary();
-
-        stream << QStorable::toBinary("dataId");
-
-        stream << QStorable::toBinary("dataLength");
-
-        for (quint32 i = 0; i < dataLength; ++i)
-            stream << dataCan[i];
-
-        return result;
-    }
-
-    void fromBinary(const QByteArray & data) override
-    {
-        QDataStream stream(data);
-
-        header.fromBinary( data );
-
-        QStorable::fromBinary(data, "dataId");
-
-        QStorable::fromBinary(data, "dataLength");
-
-        for (quint32 i = 0; i < dataLength; ++i)
-            stream >> dataCan[i];
-    }
+    // [[nodiscard]] QByteArray toBinary() const override
+    // {
+    //     QByteArray result;
+    //
+    //     QDataStream stream(&result, QIODevice::WriteOnly);
+    //
+    //     qBinarySupport::configureStream( stream, m_byteOrder, m_precision );
+    //
+    //     auto headerData = header.toBinary();
+    //
+    //     stream.writeRawData( headerData.constData(), headerData.size() ) ;
+    //
+    //     stream << QStorable::toBinary("dataId");
+    //
+    //     stream << QStorable::toBinary("dataLength");
+    //
+    //     for (quint32 i = 0; i < dataLength; ++i)
+    //         stream << dataCan[i];
+    //
+    //     return result;
+    // }
+    //
+    // void fromBinary(const QByteArray & data) override
+    // {
+    //     QDataStream stream(data);
+    //
+    //     qBinarySupport::configureStream( stream, m_byteOrder, m_precision );
+    //
+    //     header.fromBinary( data );
+    //
+    //     QStorable::fromBinary(data, "dataId");
+    //
+    //     QStorable::fromBinary(data, "dataLength");
+    //
+    //     for (quint32 i = 0; i < dataLength; ++i)
+    //         stream >> dataCan[i];
+    // }
 };
 
 constexpr quint64 TIME = 0x1996250415;
@@ -101,10 +110,11 @@ private Q_SLOTS:
         binaryData.fromBinary(result);
 
         QCOMPARE(binaryData.header, header);
-        // QCOMPARE( binaryData.dataId, data.dataId );
-        // QCOMPARE( binaryData.dataLength, data.dataLength );
-        // for (quint32 i = 0; i < data.dataLength; ++i)
-        //     QCOMPARE( data.dataCan[i], i );
+        QCOMPARE( binaryData.dataId, data.dataId );
+        QCOMPARE( binaryData.dataLength, data.dataLength );
+
+        for (quint32 i = 0; i < data.dataLength; ++i)
+            QCOMPARE( data.dataCan[i], i );
     }
 };
 

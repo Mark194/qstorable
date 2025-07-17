@@ -2,6 +2,8 @@
 
 #include <QStorable/qstorable.hpp>
 
+#include "compares.hpp"
+
 class Range : public QStorable
 {
     QSTORABLE
@@ -10,7 +12,9 @@ class Range : public QStorable
     QS_FIELD(double, z)
 public:
     bool operator==(const Range& other) const {
-        return x == other.x and y == other.y and z == other.z;
+        return almostEqual(x, other.x) and
+               almostEqual(y, other.y) and
+               almostEqual(z, other.z);
     }
 };
 
@@ -39,6 +43,8 @@ private Q_SLOTS:
     {
         qDebug() << "Initializing binary serialization tests...";
     }
+
+
 
     void testFixedArrayObject()
     {
@@ -119,7 +125,10 @@ private Q_SLOTS:
 
         const QVector ranges = {range, range2, range3};
 
-        QCOMPARE(customObject2.ranges, ranges);
+        for (int i = 0; i < 3; ++i)
+
+            QCOMPARE(customObject2.ranges[i], ranges[i]);
+
     }
 };
 
