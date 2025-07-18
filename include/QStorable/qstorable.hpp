@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef QS_BINARY_SUPPORT
+#if defined(QS_BINARY_SUPPORT) || defined(QS_COMPACT_BINARY_SUPPORT)
 #include <QDataStream>
 #endif
 
@@ -20,91 +20,73 @@
     Q_GADGET \
     QS_META_OBJECT_METHOD
 
-#ifdef QS_BINARY_SUPPORT
+#if defined(QS_BINARY_SUPPORT) || defined(QS_COMPACT_BINARY_SUPPORT)
 namespace qBinarySupport
 {
-    inline void configureStream(QDataStream &stream,
-                              QDataStream::ByteOrder byteOrder,
-                              QDataStream::FloatingPointPrecision precision)
+    inline void configureStream( QDataStream & stream, QDataStream::ByteOrder byteOrder, QDataStream::FloatingPointPrecision precision )
     {
-        stream.setByteOrder(byteOrder);
-        stream.setFloatingPointPrecision(precision);
+        stream.setByteOrder( byteOrder );
+        stream.setFloatingPointPrecision( precision );
     }
 
     template <typename Container, typename T>
-    void serializeFieldTo(Container& data, const T& value,
-                        QDataStream::ByteOrder byteOrder,
-                        QDataStream::FloatingPointPrecision precision)
+    void serializeFieldTo( Container & data, const T & value, QDataStream::ByteOrder byteOrder, QDataStream::FloatingPointPrecision precision )
     {
-        QDataStream stream(&data, QIODevice::WriteOnly);
-        configureStream(stream, byteOrder, precision);
+        QDataStream stream( &data, QIODevice::WriteOnly );
+        configureStream( stream, byteOrder, precision );
         stream << value;
     }
 
     template <typename T, typename Container>
-    T deserializeFieldFrom(const Container& data,
-                         QDataStream::ByteOrder byteOrder,
-                         QDataStream::FloatingPointPrecision precision)
+    T deserializeFieldFrom( const Container & data, QDataStream::ByteOrder byteOrder, QDataStream::FloatingPointPrecision precision )
     {
-        QDataStream stream(data);
-        configureStream(stream, byteOrder, precision);
+        QDataStream stream( data );
+        configureStream( stream, byteOrder, precision );
         T value;
         stream >> value;
         return value;
     }
 
     template <typename T, typename Container>
-    void serializeArray(Container& data,
-                     const T & array,
-                     int size,
-                     QDataStream::ByteOrder byteOrder,
-                     QDataStream::FloatingPointPrecision precision)
+    void serializeArray( Container & data, const T & array, int size, QDataStream::ByteOrder byteOrder, QDataStream::FloatingPointPrecision precision )
     {
-        QDataStream stream(&data, QIODevice::WriteOnly);
-        configureStream(stream, byteOrder, precision);
-        for (int i = 0; i < size; ++i) {
+        QDataStream stream( &data, QIODevice::WriteOnly );
+        configureStream( stream, byteOrder, precision );
+        for ( int i = 0; i < size; ++i )
+        {
             stream << array[i];
         }
     }
 
     template <typename T, typename Container>
-    void deserializeArray(const Container& data,
-                          T& array,
-                          int size,
-                          QDataStream::ByteOrder byteOrder,
-                          QDataStream::FloatingPointPrecision precision)
+    void deserializeArray( const Container & data, T & array, int size, QDataStream::ByteOrder byteOrder, QDataStream::FloatingPointPrecision precision )
     {
-        QDataStream stream(data);
-        configureStream(stream, byteOrder, precision);
-        for (int i = 0; i < size; ++i) {
+        QDataStream stream( data );
+        configureStream( stream, byteOrder, precision );
+        for ( int i = 0; i < size; ++i )
+        {
             stream >> array[i];
         }
     }
 
     template <template<typename> class Collection, typename ItemType>
-    void serializeCollection(QByteArray & data,
-                             const Collection<ItemType>& array,
-                             int size,
-                             QDataStream::ByteOrder byteOrder,
-                             QDataStream::FloatingPointPrecision precision)
+    void serializeCollection( QByteArray & data, const Collection<ItemType> & array, int size, QDataStream::ByteOrder byteOrder, QDataStream::FloatingPointPrecision precision )
     {
-        QDataStream stream(&data, QIODevice::WriteOnly);
-        configureStream(stream, byteOrder, precision);
-        for (int i = 0; i < qMin(size, array.size()); ++i) {
+        QDataStream stream( &data, QIODevice::WriteOnly );
+        configureStream( stream, byteOrder, precision );
+        for ( int i = 0; i < qMin( size, array.size() ); ++i )
+        {
             stream << array[i];
         }
     }
 
-template <template<typename> class Collection, typename ItemType>
-    void deserializeCollection(const QByteArray & data,
-                         Collection<ItemType>& array,
-                         int size,
-                         QDataStream::ByteOrder byteOrder,
-                         QDataStream::FloatingPointPrecision precision)
+    template <template<typename> class Collection, typename ItemType>
+    void deserializeCollection( const QByteArray & data, Collection<ItemType> & array, int size, QDataStream::ByteOrder byteOrder, QDataStream::FloatingPointPrecision precision )
     {
-        QDataStream stream(data);
-        configureStream(stream, byteOrder, precision);
-        for (int i = 0; i < size; ++i) {
+        QDataStream stream( data );
+        configureStream( stream, byteOrder, precision );
+        for ( int i = 0; i < size; ++i )
+        {
             ItemType item;
             stream >> item;
             array << item;
@@ -115,90 +97,108 @@ template <template<typename> class Collection, typename ItemType>
 
 class QStorable
 {
-    Q_GADGET
-    QS_STORABLE
+    Q_GADGET QS_STORABLE
 
 public:
     QStorable() = default;
     virtual ~QStorable() = default;
 
-#ifdef QS_BINARY_SUPPORT
+#if defined(QS_BINARY_SUPPORT) || defined(QS_COMPACT_BINARY_SUPPORT)
 
 public:
-    void setByteOrder(QDataStream::ByteOrder byteOrder) {
+    void setByteOrder( QDataStream::ByteOrder byteOrder )
+    {
         m_byteOrder = byteOrder;
     }
 
-    void setPrecision(QDataStream::FloatingPointPrecision precision) {
+    void setPrecision( QDataStream::FloatingPointPrecision precision )
+    {
         m_precision = precision;
     }
+#endif
 
-
-
-    virtual QByteArray toBinary() const {
+#ifdef QS_BINARY_SUPPORT
+    virtual QByteArray toBinary() const
+    {
         QByteArray data;
-        QDataStream stream(&data, QIODevice::WriteOnly);
-        qBinarySupport::configureStream(stream, m_byteOrder, m_precision);
+        QDataStream stream( &data, QIODevice::WriteOnly );
+        qBinarySupport::configureStream( stream, m_byteOrder, m_precision );
 
-        const QMetaObject* meta = metaObject();
-        for (int i = 0; i < meta->propertyCount(); ++i) {
-            QMetaProperty prop = meta->property(i);
-            if (prop.userType() == qMetaTypeId<QByteArray>()) {
-                QByteArray value = prop.readOnGadget(this).toByteArray();
+        const QMetaObject * meta = metaObject();
+        for ( int i = 0; i < meta->propertyCount(); ++i )
+        {
+            QMetaProperty prop = meta->property( i );
+            if ( prop.userType() == qMetaTypeId<QByteArray>() )
+            {
+                QByteArray value = prop.readOnGadget( this ).toByteArray();
                 stream << value;
             }
         }
         return data;
     }
 
-    // Сериализация только указанного поля (перегрузка)
-    virtual QByteArray toBinary(const QString& fieldName) const {
+    virtual void fromBinary( const QByteArray & data )
+    {
+        QDataStream stream( data );
+        qBinarySupport::configureStream( stream, m_byteOrder, m_precision );
+
+        const QMetaObject * meta = metaObject();
+        for ( int i = 0; i < meta->propertyCount(); ++i )
+        {
+            QMetaProperty prop = meta->property( i );
+            if ( prop.userType() == qMetaTypeId<QByteArray>() )
+            {
+                QByteArray value;
+                stream >> value;
+                prop.writeOnGadget( this, value );
+            }
+        }
+    }
+#endif
+
+#ifdef QS_BINARY_COMPACT_SUPPORT
+    virtual QByteArray toCompact() const {
         QByteArray data;
         QDataStream stream(&data, QIODevice::WriteOnly);
-        qBinarySupport::configureStream(stream, m_byteOrder, m_precision);
+        stream.setByteOrder(QDataStream::LittleEndian);
 
-        const QMetaObject* meta = metaObject();
-        for (int i = 0; i < meta->propertyCount(); ++i) {
-            QMetaProperty prop = meta->property(i);
-            if (QString(prop.name()) == fieldName and
-                prop.userType() == qMetaTypeId<QByteArray>()) {
-                QByteArray value = prop.readOnGadget(this).toByteArray();
-                stream << value;
+        const QMetaObject* metaObj = metaObject();
+        for (int i = 0; i < metaObj->propertyCount(); ++i) {
+            QMetaProperty prop = metaObj->property(i);
+            if (prop.isReadable()) {
+                QVariant value = prop.readOnGadget(this);
+                if (value.isValid()) {
+                    const int typeSize = QMetaType::sizeOf(value.userType());
+                    if (typeSize > 0) {
+                        stream.writeRawData(static_cast<const char*>(value.constData()), typeSize);
+                    }
+                }
             }
         }
         return data;
     }
 
-    virtual void fromBinary(const QByteArray& data) {
+    virtual void fromCompact(const QByteArray& data) {
         QDataStream stream(data);
-        qBinarySupport::configureStream(stream, m_byteOrder, m_precision);
+        stream.setByteOrder(QDataStream::LittleEndian);
 
-        const QMetaObject* meta = metaObject();
-        for (int i = 0; i < meta->propertyCount(); ++i) {
-            QMetaProperty prop = meta->property(i);
-            if (prop.userType() == qMetaTypeId<QByteArray>()) {
-                QByteArray value;
-                stream >> value;
-                prop.writeOnGadget(this, value);
+        const QMetaObject* metaObj = metaObject();
+        for (int i = 0; i < metaObj->propertyCount(); ++i) {
+            QMetaProperty prop = metaObj->property(i);
+            if (prop.isWritable()) {
+                const int typeId = prop.userType();
+                const int typeSize = QMetaType::sizeOf(typeId);
+                if (typeSize > 0) {
+                    QVariant var(typeId, nullptr);
+                    stream.readRawData(static_cast<char*>(var.data()), typeSize);
+                    prop.writeOnGadget(this, var);
+                }
             }
         }
     }
+#endif
 
-    virtual void fromBinary(const QByteArray& data, const QString& fieldName) {
-        QDataStream stream(data);
-        qBinarySupport::configureStream(stream, m_byteOrder, m_precision);
-
-        const QMetaObject* meta = metaObject();
-        for (int i = 0; i < meta->propertyCount(); ++i) {
-            QMetaProperty prop = meta->property(i);
-            if (QString(prop.name()) == fieldName && prop.userType() == qMetaTypeId<QByteArray>()) {
-                QByteArray value;
-                stream >> value;
-                prop.writeOnGadget(this, value);
-                break; // Нашли нужное поле - выходим
-            }
-        }
-    }
+#if defined(QS_BINARY_SUPPORT) || defined(QS_COMPACT_BINARY_SUPPORT)
 
 protected:
     QDataStream::ByteOrder m_byteOrder = QDataStream::BigEndian;
@@ -211,8 +211,7 @@ protected:
 
 #define QS_DECLARE_MEMBER(type, name) \
     public: \
-        type name{}; \
-
+        type name{};
 #define QS_DECLARE_RVALUE_MEMBER(type, name) \
     public: \
         type name{};
@@ -341,9 +340,20 @@ protected:
 #define QS_BINARY_COLLECTION_OBJECT(collection, itemType, name, size)
 #endif
 
+#ifdef QS_BINARY_COMPACT_SUPPORT
+#define QS_COMPACT_FIELD(type, name) \
+    Q_PROPERTY( type name READ GET(compact, name) WRITE SET(compact, name) ) \
+    type GET(compact, name)() const { return name; } \
+    void SET(compact, name)(const type & value) { name = value; }
+#else
+#define QS_COMPACT_FIELD(type, name)
+#endif
+
+
 #define QS_FIELD(type, name) \
     QS_DECLARE_MEMBER(type, name) \
-    QS_BINARY_FIELD(type, name)
+    QS_BINARY_FIELD(type, name) \
+    QS_COMPACT_FIELD(type, name)
 
 #define QS_OBJECT(type, name) \
     QS_DECLARE_RVALUE_MEMBER(type, name) \
